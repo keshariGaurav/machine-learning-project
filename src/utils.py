@@ -3,6 +3,7 @@ import sys
 import dill
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import GridSearchCV 
 from src.exception import CustomException
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 
@@ -17,12 +18,17 @@ def save_object(file_path, obj):
         raise CustomException(e, sys)
     
 
-def evaluate_model(x_train, y_train, x_test, y_test, models):
+def evaluate_model(x_train, y_train, x_test, y_test, models, param):
     try:
         report = {}
         for i in range(len(list(models))):
+            print("Processing model ", i)
             model = list(models.values())[i]
-            model.fit(x_train, y_train) # Train model
+            para = param[list(models.keys())[i]]
+            gs = GridSearchCV(model, para, cv=3)
+            gs.fit(x_train, y_train) # Train model
+            model.set_params(**gs.best_params_)
+            model.fit(x_train, y_train)
 
             # Make predictions
             y_train_pred = model.predict(x_train)
